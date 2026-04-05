@@ -1,0 +1,11 @@
+.git/**
+.gitignore
+.vscode/**
+package-lock.json
+*.vsix
+node_modules/.bin/**
+node_modules/@vscode/**
+node_modules/keytar/**
+node_modules/prebuild-install/**
+node_modules/rc/**
+node_modules/tar/**

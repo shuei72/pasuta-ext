@@ -1,0 +1,78 @@
+{
+  "name": "rumo-pasuta",
+  "displayName": "Pasuta",
+  "description": "Copy editor text with tabs expanded to spaces, with optional line numbers.",
+  "version": "0.0.1",
+  "publisher": "shuei",
+  "license": "MIT",
+  "homepage": "https://github.com/shuei/pasuta-ext#readme",
+  "bugs": {
+    "url": "https://github.com/shuei/pasuta-ext/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shuei/pasuta-ext.git"
+  },
+  "icon": "media/icon.png",
+  "markdown": "github",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "copy",
+    "clipboard",
+    "code copy",
+    "line numbers",
+    "image",
+    "rich text"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": {
+      "supported": true
+    }
+  },
+  "activationEvents": [
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "pasuta.copyText",
+        "title": "Pasuta: Copy Text"
+      },
+      {
+        "command": "pasuta.copyTextWithColonLines",
+        "title": "Pasuta: Copy Text with Colon Lines"
+      },
+      {
+        "command": "pasuta.copyTextWithTabLines",
+        "title": "Pasuta: Copy Text with Tab Lines"
+      },
+      {
+        "command": "pasuta.copyImage",
+        "title": "Pasuta: Copy Image"
+      },
+      {
+        "command": "pasuta.copyImageWithColonLines",
+        "title": "Pasuta: Copy Image with Colon Lines"
+      }
+    ]
+  },
+  "dependencies": {
+    "shiki": "^4.0.2"
+  },
+  "scripts": {
+    "compile": "node -c extension.js && node -c lib\\copyContent.js && node -c lib\\rendering.js && node -c lib\\clipboard.js",
+    "package": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@vscode/vsce": "^3.7.1"
+  }
+}

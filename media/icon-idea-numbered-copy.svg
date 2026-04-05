@@ -1,0 +1,27 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pasuta icon idea numbered copy">
+  <defs>
+    <linearGradient id="bg3" x1="24" y1="18" x2="232" y2="238" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#21344A"/>
+      <stop offset="1" stop-color="#0C151D"/>
+    </linearGradient>
+    <linearGradient id="sheetBack" x1="62" y1="44" x2="158" y2="186" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#BFD6EC"/>
+      <stop offset="1" stop-color="#94B6D5"/>
+    </linearGradient>
+    <linearGradient id="sheetFront" x1="88" y1="66" x2="202" y2="214" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F1F7FC"/>
+      <stop offset="1" stop-color="#DCE9F6"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="224" height="224" rx="48" fill="url(#bg3)"/>
+  <rect x="56" y="50" width="92" height="128" rx="20" fill="url(#sheetBack)"/>
+  <rect x="84" y="74" width="116" height="144" rx="24" fill="url(#sheetFront)" stroke="#8FAFCD" stroke-width="6"/>
+  <text x="100" y="118" font-size="28" font-family="Segoe UI, sans-serif" font-weight="700" fill="#567491">1</text>
+  <text x="100" y="152" font-size="28" font-family="Segoe UI, sans-serif" font-weight="700" fill="#567491">2</text>
+  <text x="100" y="186" font-size="28" font-family="Segoe UI, sans-serif" font-weight="700" fill="#567491">3</text>
+  <path d="M124 110h48" stroke="#1F3448" stroke-width="10" stroke-linecap="round"/>
+  <path d="M124 144h38" stroke="#1F3448" stroke-width="10" stroke-linecap="round"/>
+  <path d="M124 178h52" stroke="#1F3448" stroke-width="10" stroke-linecap="round"/>
+  <path d="M166 54h20v24" fill="none" stroke="#F5A623" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M170 72l16-18" fill="none" stroke="#F5A623" stroke-width="10" stroke-linecap="round"/>
+</svg>
