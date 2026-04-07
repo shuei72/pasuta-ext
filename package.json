@@ -37,9 +37,8 @@
       "supported": true
     }
   },
-  "activationEvents": [
-  ],
-  "main": "./extension.js",
+  "activationEvents": [],
+  "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
@@ -68,11 +67,13 @@
     "shiki": "^4.0.2"
   },
   "scripts": {
-    "compile": "node -c extension.js && node -c lib\\copyContent.js && node -c lib\\rendering.js && node -c lib\\clipboard.js",
-    "package": "npx @vscode/vsce package"
+    "bundle": "esbuild extension.js --bundle --platform=node --format=cjs --target=node20 --external:vscode --outfile=dist/extension.js",
+    "compile": "npm run bundle && node -c dist\\extension.js",
+    "package": "npm run compile && npx @vscode/vsce package"
   },
   "devDependencies": {
     "@types/vscode": "^1.74.0",
-    "@vscode/vsce": "^3.7.1"
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.28.0"
   }
 }
