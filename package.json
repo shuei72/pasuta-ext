@@ -64,7 +64,7 @@
     ]
   },
   "dependencies": {
-    "shiki": "^4.0.2"
+    "prismjs": "^1.30.0"
   },
   "scripts": {
     "bundle": "esbuild extension.js --bundle --platform=node --format=cjs --target=node20 --external:vscode --outfile=dist/extension.js",
