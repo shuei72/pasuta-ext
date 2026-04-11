@@ -1,25 +1,20 @@
-"use strict";
-
-const vscode = require("vscode");
-
-const {
+import * as vscode from "vscode";
+import {
   formatLinesAsText,
   getLineNumberMode,
   getRenderOptions,
   getTextCopyMessage,
   prepareCopyContent
-} = require("./lib/copyContent");
-const {
+} from "./copyContent";
+import { copyHighlightedImage, copyHighlightedText } from "./clipboard";
+import {
   buildHighlightedRenderData,
-  copyHighlightedImage,
-  copyHighlightedText
-} = require("./lib/clipboard");
+  type LineNumberMode,
+  type TextCopyFormat
+} from "./rendering";
 
-/**
- * Registers Pasuta commands that copy selections as formatted text or images.
- * @param {vscode.ExtensionContext} context VS Code extension context.
- */
-function activate(context) {
+export function activate(context: vscode.ExtensionContext): void {
+  // Register all copy commands up front so the extension can stay activation-light.
   context.subscriptions.push(
     vscode.commands.registerCommand("pasuta.copyText", () => {
       return copySelectionsAsText({ format: "plain" });
@@ -39,12 +34,10 @@ function activate(context) {
   );
 }
 
-/**
- * Copies the active selections as expanded plain text and falls back gracefully if rich copy fails.
- * @param {{ format: "plain" | "colonLines" | "tabLines" }} options Output format option.
- * @returns {Promise<void>}
- */
-async function copySelectionsAsText({ format }) {
+async function copySelectionsAsText(
+  { format }: { format: TextCopyFormat }
+): Promise<void> {
+  // Normalize selections first so plain text and rich text share the same source lines.
   const prepared = await prepareCopyContent({ lineNumberMode: getLineNumberMode(format) });
   if (!prepared) {
     return;
@@ -70,12 +63,10 @@ async function copySelectionsAsText({ format }) {
   vscode.window.showInformationMessage(getTextCopyMessage(format));
 }
 
-/**
- * Copies the active selections as a syntax-highlighted image using the current editor theme.
- * @param {{ lineNumberMode: "none" | "colonLines" | "tabLines" }} options Image render options.
- * @returns {Promise<void>}
- */
-async function copySelectionsAsImage({ lineNumberMode }) {
+async function copySelectionsAsImage(
+  { lineNumberMode }: { lineNumberMode: LineNumberMode }
+): Promise<void> {
+  // Image output uses the same prepared lines, but renders them with theme-aware colors.
   const prepared = await prepareCopyContent({ lineNumberMode });
   if (!prepared) {
     return;
@@ -98,18 +89,11 @@ async function copySelectionsAsImage({ lineNumberMode }) {
     return;
   }
 
-  const message = lineNumberMode === "colonLines"
-    ? "Copied image with expanded tabs and line numbers."
-    : "Copied image with expanded tabs.";
+  const message =
+    lineNumberMode === "colonLines"
+      ? "Copied image with expanded tabs and line numbers."
+      : "Copied image with expanded tabs.";
   vscode.window.showInformationMessage(message);
 }
 
-/**
- * Exposes a deactivate hook for VS Code.
- */
-function deactivate() {}
-
-module.exports = {
-  activate,
-  deactivate
-};
+export function deactivate(): void {}

@@ -1,8 +1,8 @@
 {
   "name": "pasuta",
   "displayName": "Pasuta",
-  "description": "Copy editor text with tabs expanded to spaces, with optional line numbers.",
-  "version": "0.0.1",
+  "description": "Copy code from VS Code as clean text or syntax-highlighted images with expanded tabs and optional line numbers.",
+  "version": "0.1.0",
   "publisher": "shuei",
   "license": "MIT",
   "homepage": "https://github.com/shuei/pasuta-ext#readme",
@@ -15,19 +15,27 @@
   },
   "icon": "media/icon.png",
   "markdown": "github",
+  "galleryBanner": {
+    "color": "#282c34",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Snippets"
   ],
   "keywords": [
     "copy",
     "clipboard",
     "code copy",
+    "copy as image",
+    "syntax highlighting",
     "line numbers",
     "image",
-    "rich text"
+    "rich text",
+    "share code"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -43,23 +51,28 @@
     "commands": [
       {
         "command": "pasuta.copyText",
-        "title": "Pasuta: Copy Text"
+        "category": "Pasuta",
+        "title": "Copy Text"
       },
       {
         "command": "pasuta.copyTextWithColonLines",
-        "title": "Pasuta: Copy Text with Colon Lines"
+        "category": "Pasuta",
+        "title": "Copy Text with Colon Lines"
       },
       {
         "command": "pasuta.copyTextWithTabLines",
-        "title": "Pasuta: Copy Text with Tab Lines"
+        "category": "Pasuta",
+        "title": "Copy Text with Tab Lines"
       },
       {
         "command": "pasuta.copyImage",
-        "title": "Pasuta: Copy Image"
+        "category": "Pasuta",
+        "title": "Copy Image"
       },
       {
         "command": "pasuta.copyImageWithColonLines",
-        "title": "Pasuta: Copy Image with Colon Lines"
+        "category": "Pasuta",
+        "title": "Copy Image with Colon Lines"
       }
     ]
   },
@@ -67,13 +80,17 @@
     "prismjs": "^1.30.0"
   },
   "scripts": {
-    "bundle": "esbuild extension.js --bundle --platform=node --format=cjs --target=node20 --external:vscode --outfile=dist/extension.js",
-    "compile": "npm run bundle && node -c dist\\extension.js",
+    "typecheck": "tsc -p . --noEmit",
+    "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node20 --external:vscode --minify --outfile=dist/extension.js",
+    "compile": "npm run typecheck && npm run bundle && node -c dist\\extension.js",
     "package": "npm run compile && npx @vscode/vsce package"
   },
   "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@types/prismjs": "^1.26.5",
     "@types/vscode": "^1.74.0",
     "@vscode/vsce": "^3.7.1",
-    "esbuild": "^0.28.0"
+    "esbuild": "^0.28.0",
+    "typescript": "^5.9.3"
   }
 }
