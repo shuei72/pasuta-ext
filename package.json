@@ -23,8 +23,7 @@
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other",
-    "Snippets"
+    "Other"
   ],
   "keywords": [
     "copy",
@@ -32,6 +31,7 @@
     "code copy",
     "copy as image",
     "syntax highlighting",
+    "paste",
     "line numbers",
     "image",
     "rich text",
