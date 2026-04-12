@@ -1,9 +1,13 @@
-﻿# Pasuta
+﻿<p align="center">
+  <img src="media/icon.png" alt="Pasuta icon" width="128" />
+</p>
+
+# Pasuta
 
 Pasuta is a VS Code extension for copying code as text or images with tabs expanded to spaces.  
 Copy commands support optional line numbers and syntax-highlighted output.
 
-## Commands
+## ✨ Commands
 
 `Pasuta: Copy Text`  
 Copies the current selection as text.
@@ -20,7 +24,7 @@ Copies the current selection as an image.
 `Pasuta: Copy Image with Colon Lines`  
 Copies the current selection as an image in `lineNumber: code` format.
 
-## Features
+## 📋 Features
 
 - Treats selections as full-line selections during copy.
 - Supports multiple selections and joins them from top to bottom.
@@ -28,7 +32,7 @@ Copies the current selection as an image in `lineNumber: code` format.
 - Applies syntax highlighting that follows the current theme (`light` or `dark`).
 - Copies rich text together with plain text on Windows and macOS.
 
-## Development
+## 🛠️ Development
 
 ### PowerShell
 
