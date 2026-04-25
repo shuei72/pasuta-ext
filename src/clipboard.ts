@@ -10,7 +10,8 @@ import {
   buildHtmlClipboard,
   buildSvgImage,
   estimateMacThumbnailSize,
-  getRichTextFontFamily
+  getRichTextFontFamily,
+  getShikiTheme
 } from "./rendering";
 import type { CopyHighlightedTextOptions, RenderData, RenderOptions } from "./rendering";
 
@@ -33,7 +34,7 @@ export async function copyHighlightedText({
     lineNumberMode: getLineNumberMode(format),
     lineNumberWidth,
     languageId,
-    theme: "light-plus"
+    theme: getShikiTheme(vscode.window.activeColorTheme.kind)
   });
   const html = buildHtmlClipboard(renderData, getRichTextFontFamily());
 

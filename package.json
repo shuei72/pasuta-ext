@@ -2,7 +2,7 @@
   "name": "pasuta",
   "displayName": "Pasuta",
   "description": "Copy code from VS Code as clean text or syntax-highlighted images with expanded tabs and optional line numbers.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "shuei",
   "license": "MIT",
   "homepage": "https://github.com/shuei/pasuta-ext#readme",
@@ -65,6 +65,11 @@
         "title": "Copy Text with Tab Lines"
       },
       {
+        "command": "pasuta.copyMarkdownCodeBlock",
+        "category": "Pasuta",
+        "title": "Copy Markdown"
+      },
+      {
         "command": "pasuta.copyImage",
         "category": "Pasuta",
         "title": "Copy Image"
@@ -77,19 +82,20 @@
     ]
   },
   "dependencies": {
-    "prismjs": "^1.30.0"
+    "@shikijs/core": "^4.0.2",
+    "@shikijs/engine-javascript": "^4.0.2",
+    "@shikijs/langs": "^4.0.2"
   },
   "scripts": {
     "typecheck": "tsc -p . --noEmit",
-    "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node20 --external:vscode --minify --outfile=dist/extension.js",
+    "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node20 --external:vscode --external:@shikijs/* --minify --outfile=dist/extension.js",
     "compile": "npm run typecheck && npm run bundle && node -c dist\\extension.js",
     "package": "npm run compile && npx @vscode/vsce package"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
-    "@types/prismjs": "^1.26.5",
     "@types/vscode": "^1.74.0",
-    "@vscode/vsce": "^3.7.1",
+    "@vscode/vsce": "^2.25.0",
     "esbuild": "^0.28.0",
     "typescript": "^5.9.3"
   }

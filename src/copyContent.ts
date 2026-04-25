@@ -155,6 +155,20 @@ export function formatLinesAsText(
     .join("\n");
 }
 
+export function formatLinesAsMarkdownCodeBlock(
+  lines: PreparedLine[],
+  languageId: string
+): string {
+  const fenceLanguage = getMarkdownFenceLanguage(languageId);
+  const body = lines.map((line) => line.text).join("\n");
+
+  if (!fenceLanguage) {
+    return `\`\`\`\n${body}\n\`\`\``;
+  }
+
+  return `\`\`\`${fenceLanguage}\n${body}\n\`\`\``;
+}
+
 export function getTextCopyMessage(format: TextCopyFormat): string {
   if (format === "tabLines") {
     return "Copied with line numbers as tab-separated text.";
@@ -165,6 +179,36 @@ export function getTextCopyMessage(format: TextCopyFormat): string {
   }
 
   return "Copied with expanded tabs.";
+}
+
+export function getMarkdownFenceLanguage(languageId: string): string {
+  const normalized = languageId.toLowerCase();
+  const aliases: Record<string, string> = {
+    javascriptreact: "jsx",
+    typescriptreact: "tsx",
+    shellscript: "bash",
+    plaintext: "",
+    text: "",
+    html: "html",
+    xml: "xml",
+    svg: "xml",
+    jsonc: "json",
+    json5: "json",
+    yaml: "yaml",
+    yml: "yaml",
+    md: "md",
+    markdown: "md",
+    dockerfile: "dockerfile",
+    bat: "bat",
+    cmd: "bat",
+    csharp: "csharp",
+    "objective-c": "objective-c",
+    "objective-cpp": "objective-cpp",
+    powershell: "powershell",
+    vb: "vb"
+  };
+
+  return aliases[normalized] ?? normalized;
 }
 
 export function expandTabs(text: string, tabSize: number, initialColumn: number): string {

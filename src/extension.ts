@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import {
   formatLinesAsText,
+  formatLinesAsMarkdownCodeBlock,
   getLineNumberMode,
   getRenderOptions,
   getTextCopyMessage,
@@ -24,6 +25,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand("pasuta.copyTextWithTabLines", () => {
       return copySelectionsAsText({ format: "tabLines" });
+    }),
+    vscode.commands.registerCommand("pasuta.copyMarkdownCodeBlock", () => {
+      return copySelectionsAsMarkdownCodeBlock();
     }),
     vscode.commands.registerCommand("pasuta.copyImage", () => {
       return copySelectionsAsImage({ lineNumberMode: "none" });
@@ -94,6 +98,19 @@ async function copySelectionsAsImage(
       ? "Copied image with expanded tabs and line numbers."
       : "Copied image with expanded tabs.";
   vscode.window.showInformationMessage(message);
+}
+
+async function copySelectionsAsMarkdownCodeBlock(): Promise<void> {
+  // Markdown copies keep the source content as a fenced code block for easy pasting.
+  const prepared = await prepareCopyContent({ lineNumberMode: "none" });
+  if (!prepared) {
+    return;
+  }
+
+  const languageId = prepared.editor.document.languageId;
+  const markdown = formatLinesAsMarkdownCodeBlock(prepared.lines, languageId);
+  await vscode.env.clipboard.writeText(markdown);
+  vscode.window.showInformationMessage("Copied as a Markdown code block.");
 }
 
 export function deactivate(): void {}
