@@ -35,7 +35,8 @@ export async function prepareCopyContent(
   return {
     editor,
     lines: copiedText,
-    lineNumberWidth: String(document.lineCount).length
+    lineNumberWidth: String(document.lineCount).length,
+    tabSize
   };
 }
 
@@ -130,7 +131,8 @@ export function collectSelectionLines(
 
     lines.push({
       lineNumber: lineNumber + 1,
-      text: expanded
+      text: expanded,
+      sourceText: lineText
     });
   }
 

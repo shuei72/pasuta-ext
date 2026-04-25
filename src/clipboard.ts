@@ -20,6 +20,8 @@ const execFileAsync = promisify(execFile);
 export async function copyHighlightedText({
   lines,
   lineNumberWidth,
+  tabSize,
+  documentUri,
   plainText,
   format,
   languageId
@@ -34,6 +36,8 @@ export async function copyHighlightedText({
     lineNumberMode: getLineNumberMode(format),
     lineNumberWidth,
     languageId,
+    tabSize,
+    documentUri,
     theme: getShikiTheme(vscode.window.activeColorTheme.kind)
   });
   const html = buildHtmlClipboard(renderData, getRichTextFontFamily());

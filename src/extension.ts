@@ -54,6 +54,8 @@ async function copySelectionsAsText(
     await copyHighlightedText({
       lines: prepared.lines,
       lineNumberWidth: prepared.lineNumberWidth,
+      tabSize: prepared.tabSize,
+      documentUri: prepared.editor.document.uri,
       plainText,
       format,
       languageId
@@ -84,6 +86,8 @@ async function copySelectionsAsImage(
       lineNumberMode,
       lineNumberWidth: prepared.lineNumberWidth,
       languageId,
+      tabSize: prepared.tabSize,
+      documentUri: prepared.editor.document.uri,
       themeKind: vscode.window.activeColorTheme.kind
     });
     await copyHighlightedImage(renderData, renderOptions);

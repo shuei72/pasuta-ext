@@ -7,6 +7,7 @@ export type ThemeName = "atom-one-light" | "atom-one-dark";
 export interface PreparedLine {
   lineNumber: number;
   text: string;
+  sourceText?: string;
 }
 
 export interface RenderSegment {
@@ -32,12 +33,15 @@ export interface PrepareCopyContentResult {
   editor: vscode.TextEditor;
   lines: PreparedLine[];
   lineNumberWidth: number;
+  tabSize: number;
 }
 
 export interface BuildHighlightedRenderDataOptions {
   lineNumberMode?: LineNumberMode;
   lineNumberWidth?: number;
   languageId: string;
+  documentUri?: vscode.Uri;
+  tabSize?: number;
   theme?: ThemeName;
   themeKind?: vscode.ColorThemeKind;
 }
@@ -45,6 +49,8 @@ export interface BuildHighlightedRenderDataOptions {
 export interface CopyHighlightedTextOptions {
   lines: PreparedLine[];
   lineNumberWidth: number;
+  tabSize: number;
+  documentUri: vscode.Uri;
   plainText: string;
   format: TextCopyFormat;
   languageId: string;
@@ -96,12 +102,22 @@ interface ShikiToken {
   color?: string;
 }
 
+interface SemanticHighlight {
+  start: number;
+  end: number;
+  tokenType: string;
+  color: string;
+}
+
 let highlighterPromise: Promise<any> | undefined;
 let languageLoadersPromise: Promise<Record<string, () => Promise<any>>> | undefined;
 const loadedThemes = new Set<ThemeName>();
 const loadedLanguages = new Set<string>();
 
 const ATOM_ONE_LIGHT_THEME = {
+  // Manual adjustments:
+  // - Add or tweak TextMate scope colors here when a language still looks too plain.
+  // - This affects Shiki's base syntax highlighting before semantic tokens are applied.
   name: LIGHT_THEME,
   displayName: "Atom One Light",
   type: "light",
@@ -111,13 +127,26 @@ const ATOM_ONE_LIGHT_THEME = {
     { settings: { foreground: LIGHT_FOREGROUND, background: LIGHT_BACKGROUND } },
     { scope: ["comment", "prolog", "doctype", "cdata"], settings: { foreground: "#a0a1a7" } },
     { scope: ["punctuation"], settings: { foreground: "#383a42" } },
-    { scope: ["property", "tag", "deleted"], settings: { foreground: "#e45649" } },
-    { scope: ["boolean", "number", "constant", "symbol"], settings: { foreground: "#986801" } },
+    {
+      scope: ["property", "tag", "deleted", "variable.other.constant", "constant.language"],
+      settings: { foreground: "#e45649" }
+    },
+    {
+      scope: ["boolean", "number", "constant", "symbol", "support.type"],
+      settings: { foreground: "#986801" }
+    },
     { scope: ["selector", "string", "char", "inserted", "url"], settings: { foreground: "#50a14f" } },
-    { scope: ["attr-name", "builtin"], settings: { foreground: "#c18401" } },
+    {
+      scope: ["attr-name", "builtin", "entity.name.type", "entity.name.class", "support.class"],
+      settings: { foreground: "#c18401" }
+    },
     { scope: ["operator"], settings: { foreground: "#383a42" } },
-    { scope: ["entity", "function"], settings: { foreground: "#4078f2" } },
-    { scope: ["variable"], settings: { foreground: "#e06c75" } },
+    { scope: ["keyword", "storage", "storage.type"], settings: { foreground: "#a626a4" } },
+    {
+      scope: ["entity", "function", "entity.name.function", "support.function"],
+      settings: { foreground: "#4078f2" }
+    },
+    { scope: ["variable", "variable.parameter"], settings: { foreground: "#e06c75" } },
     { scope: ["atrule", "keyword", "important", "namespace"], settings: { foreground: "#a626a4" } },
     { scope: ["attr-value"], settings: { foreground: "#50a14f" } },
     { scope: ["regex"], settings: { foreground: "#50a14f" } },
@@ -126,6 +155,9 @@ const ATOM_ONE_LIGHT_THEME = {
 } as const;
 
 const ATOM_ONE_DARK_THEME = {
+  // Manual adjustments:
+  // - Keep this in sync with the light theme above.
+  // - If a token is colored incorrectly in dark mode, adjust the matching scope here.
   name: DARK_THEME,
   displayName: "Atom One Dark",
   type: "dark",
@@ -135,14 +167,27 @@ const ATOM_ONE_DARK_THEME = {
     { settings: { foreground: DARK_FOREGROUND, background: DARK_BACKGROUND } },
     { scope: ["comment", "prolog", "doctype", "cdata"], settings: { foreground: "#5c6370" } },
     { scope: ["punctuation"], settings: { foreground: "#abb2bf" } },
-    { scope: ["property", "tag", "deleted"], settings: { foreground: "#e06c75" } },
-    { scope: ["boolean", "number", "constant", "symbol"], settings: { foreground: "#d19a66" } },
+    {
+      scope: ["property", "tag", "deleted", "variable.other.constant", "constant.language"],
+      settings: { foreground: "#e06c75" }
+    },
+    {
+      scope: ["boolean", "number", "constant", "symbol", "support.type"],
+      settings: { foreground: "#d19a66" }
+    },
     { scope: ["selector", "string", "char", "inserted", "url"], settings: { foreground: "#98c379" } },
-    { scope: ["attr-name"], settings: { foreground: "#d19a66" } },
+    {
+      scope: ["attr-name", "entity.name.type", "entity.name.class", "support.class"],
+      settings: { foreground: "#d19a66" }
+    },
     { scope: ["builtin"], settings: { foreground: "#56b6c2" } },
     { scope: ["operator"], settings: { foreground: "#56b6c2" } },
-    { scope: ["entity", "function"], settings: { foreground: "#61afef" } },
-    { scope: ["variable"], settings: { foreground: "#e06c75" } },
+    { scope: ["keyword", "storage", "storage.type"], settings: { foreground: "#c678dd" } },
+    {
+      scope: ["entity", "function", "entity.name.function", "support.function"],
+      settings: { foreground: "#61afef" }
+    },
+    { scope: ["variable", "variable.parameter"], settings: { foreground: "#e06c75" } },
     { scope: ["atrule", "keyword", "important", "namespace"], settings: { foreground: "#c678dd" } },
     { scope: ["attr-value"], settings: { foreground: "#98c379" } },
     { scope: ["regex"], settings: { foreground: "#98c379" } },
@@ -214,6 +259,12 @@ export async function buildHighlightedRenderData(
   const theme = options.theme ?? getShikiTheme(options.themeKind);
   const lineNumberMode = options.lineNumberMode ?? "none";
   const language = await ensureShikiLanguageLoaded(options.languageId);
+  const semanticHighlights = await getSemanticHighlights(
+    options.documentUri,
+    lines,
+    options.tabSize,
+    theme
+  );
   const code = lines.map((line) => line.text).join("\n");
   const highlighted = await tokenizeCodeWithShiki(code, language, theme);
   const foregroundColor = highlighted.foregroundColor;
@@ -242,7 +293,15 @@ export async function buildHighlightedRenderData(
         });
       }
 
-      segments.push(...(highlighted.lines[index] ?? []));
+      segments.push(
+        ...applySemanticHighlights(
+          line,
+          highlighted.lines[index] ?? [],
+          semanticHighlights[index] ?? [],
+          foregroundColor,
+          theme
+        )
+      );
 
       if (segments.length === 0) {
         segments.push({
@@ -418,6 +477,238 @@ async function tokenizeCodeWithShiki(
     foregroundColor,
     backgroundColor
   };
+}
+
+async function getSemanticHighlights(
+  documentUri: vscode.Uri | undefined,
+  lines: PreparedLine[],
+  tabSize: number | undefined,
+  theme: ThemeName
+): Promise<SemanticHighlight[][]> {
+  // Manual adjustments:
+  // - Expand the tokenType -> color mapping below if VS Code emits a useful semantic token
+  //   type for a language you care about.
+  // - This is the shared override path for "semantic" coloring across all languages.
+  // - The offsets from VS Code are based on the raw document text, so we convert them to
+  //   expanded columns with buildExpandedColumnMap() before overlaying colors.
+  if (!documentUri || lines.length === 0) {
+    return lines.map(() => []);
+  }
+
+  const safeTabSize = tabSize && tabSize > 0 ? tabSize : 4;
+  const documentLineToPreparedIndexes = new Map<number, number[]>();
+
+  lines.forEach((line, index) => {
+    const existing = documentLineToPreparedIndexes.get(line.lineNumber - 1);
+    if (existing) {
+      existing.push(index);
+      return;
+    }
+
+    documentLineToPreparedIndexes.set(line.lineNumber - 1, [index]);
+  });
+
+  let legend: vscode.SemanticTokensLegend | undefined;
+  let tokens: vscode.SemanticTokens | undefined;
+
+  try {
+    [legend, tokens] = await Promise.all([
+      vscode.commands.executeCommand<vscode.SemanticTokensLegend | undefined>(
+        "vscode.provideDocumentSemanticTokensLegend",
+        documentUri
+      ),
+      vscode.commands.executeCommand<vscode.SemanticTokens | undefined>(
+        "vscode.provideDocumentSemanticTokens",
+        documentUri
+      )
+    ]);
+  } catch {
+    return lines.map(() => []);
+  }
+
+  if (!legend || !tokens?.data || legend.tokenTypes.length === 0) {
+    return lines.map(() => []);
+  }
+
+  const semanticHighlights: SemanticHighlight[][] = lines.map(() => []);
+  const data = tokens.data;
+  let currentLine = 0;
+  let currentChar = 0;
+
+  for (let offset = 0; offset + 4 < data.length; offset += 5) {
+    const deltaLine = data[offset];
+    const deltaStart = data[offset + 1];
+    const length = data[offset + 2];
+    const tokenTypeIndex = data[offset + 3];
+
+    currentLine += deltaLine;
+    currentChar = deltaLine === 0 ? currentChar + deltaStart : deltaStart;
+
+    const tokenType = legend.tokenTypes[tokenTypeIndex];
+    const color = tokenType ? getSemanticTokenColor(tokenType, theme) : undefined;
+    if (!tokenType || !color) {
+      continue;
+    }
+
+    const preparedIndexes = documentLineToPreparedIndexes.get(currentLine);
+    if (!preparedIndexes || length === 0) {
+      continue;
+    }
+
+    for (const preparedIndex of preparedIndexes) {
+      const preparedLine = lines[preparedIndex];
+      const sourceText = preparedLine.sourceText ?? preparedLine.text;
+      const columnMap = buildExpandedColumnMap(sourceText, safeTabSize);
+      const start = Math.min(currentChar, sourceText.length);
+      const end = Math.min(currentChar + length, sourceText.length);
+      if (end <= start) {
+        continue;
+      }
+
+      const expandedStart = columnMap[start];
+      const expandedEnd = columnMap[end];
+      if (expandedEnd <= expandedStart) {
+        continue;
+      }
+
+      semanticHighlights[preparedIndex].push({
+        start: expandedStart,
+        end: expandedEnd,
+        tokenType,
+        color
+      });
+    }
+  }
+
+  return semanticHighlights;
+}
+
+function getSemanticTokenColor(tokenType: string, theme: ThemeName): string | undefined {
+  // Manual adjustments:
+  // - Add new tokenType cases here when a language exposes a semantic token that should
+  //   override the normal Shiki/TextMate color.
+  // - Return undefined to leave the token unchanged.
+  const palette = theme === LIGHT_THEME
+    ? {
+        classLike: "#c18401",
+        functionLike: "#4078f2",
+        propertyLike: "#e45649",
+        variableLike: "#e06c75",
+        keywordLike: "#a626a4",
+        constantLike: "#986801"
+      }
+    : {
+        classLike: "#e5c07b",
+        functionLike: "#61afef",
+        propertyLike: "#e06c75",
+        variableLike: "#e06c75",
+        keywordLike: "#c678dd",
+        constantLike: "#d19a66"
+      };
+
+  if (
+    tokenType === "class" ||
+    tokenType === "enum" ||
+    tokenType === "interface" ||
+    tokenType === "struct" ||
+    tokenType === "type" ||
+    tokenType === "typeParameter" ||
+    tokenType === "namespace"
+  ) {
+    return palette.classLike;
+  }
+
+  if (tokenType === "function" || tokenType === "method") {
+    return palette.functionLike;
+  }
+
+  if (tokenType === "property") {
+    return palette.propertyLike;
+  }
+
+  if (tokenType === "parameter" || tokenType === "variable") {
+    return palette.variableLike;
+  }
+
+  if (tokenType === "enumMember" || tokenType === "constant") {
+    return palette.constantLike;
+  }
+
+  if (tokenType === "keyword" || tokenType === "operator") {
+    return palette.keywordLike;
+  }
+
+  return undefined;
+}
+
+function buildExpandedColumnMap(text: string, tabSize: number): number[] {
+  // Convert raw document character offsets into display columns after tab expansion.
+  const map = new Array<number>(text.length + 1);
+  let column = 0;
+  map[0] = 0;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (char === "\t") {
+      const spaces = tabSize - (column % tabSize);
+      column += spaces;
+    } else {
+      column += 1;
+    }
+
+    map[index + 1] = column;
+  }
+
+  return map;
+}
+
+function applySemanticHighlights(
+  line: PreparedLine,
+  baseSegments: RenderSegment[],
+  semanticHighlights: SemanticHighlight[],
+  fallbackColor: string,
+  theme: ThemeName
+): RenderSegment[] {
+  const expandedText = line.text;
+  if (expandedText.length === 0) {
+    return baseSegments.length > 0 ? mergeAdjacentSegments(baseSegments) : [];
+  }
+
+  const colors = new Array<string>(expandedText.length).fill(fallbackColor);
+  let cursor = 0;
+
+  for (const segment of baseSegments) {
+    const color = segment.color || fallbackColor;
+    for (let index = 0; index < segment.text.length && cursor + index < colors.length; index += 1) {
+      colors[cursor + index] = color;
+    }
+    cursor += segment.text.length;
+  }
+
+  for (const highlight of semanticHighlights) {
+    const color = highlight.color || fallbackColor;
+    for (let index = Math.max(0, highlight.start); index < Math.min(highlight.end, colors.length); index += 1) {
+      colors[index] = color;
+    }
+  }
+
+  const merged: RenderSegment[] = [];
+  let runColor = colors[0];
+  let runText = expandedText[0];
+
+  for (let index = 1; index < expandedText.length; index += 1) {
+    if (colors[index] === runColor) {
+      runText += expandedText[index];
+      continue;
+    }
+
+    merged.push({ text: runText, color: runColor });
+    runColor = colors[index];
+    runText = expandedText[index];
+  }
+
+  merged.push({ text: runText, color: runColor });
+  return merged;
 }
 
 function mergeAdjacentSegments(segments: RenderSegment[]): RenderSegment[] {
