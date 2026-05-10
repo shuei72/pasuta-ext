@@ -88,7 +88,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p . --noEmit",
-    "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node20 --external:vscode --external:@shikijs/* --minify --outfile=dist/extension.js",
+    "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node20 --external:vscode --minify --outfile=dist/extension.js",
     "compile": "npm run typecheck && npm run bundle && node -c dist\\extension.js",
     "package": "npm run compile && npx @vscode/vsce package"
   },
